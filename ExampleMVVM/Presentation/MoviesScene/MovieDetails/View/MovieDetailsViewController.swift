@@ -11,6 +11,7 @@ import UIKit
 final class MovieDetailsViewController: UIViewController, StoryboardInstantiable {
 
     @IBOutlet private var posterImageView: UIImageView!
+    @IBOutlet private var ratingLabel: UILabel!
     @IBOutlet private var overviewTextView: UITextView!
 
     // MARK: - Lifecycle
@@ -42,6 +43,12 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
 
     private func setupViews() {
         title = viewModel.title
+        
+        ratingLabel.clipsToBounds = true
+        ratingLabel.layer.cornerRadius = 5.0
+        ratingLabel.isHidden = viewModel.isRatingHidden
+        ratingLabel.text = viewModel.rating
+        
         overviewTextView.text = viewModel.overview
         posterImageView.isHidden = viewModel.isPosterImageHidden
         view.accessibilityIdentifier = AccessibilityIdentifier.movieDetailsView

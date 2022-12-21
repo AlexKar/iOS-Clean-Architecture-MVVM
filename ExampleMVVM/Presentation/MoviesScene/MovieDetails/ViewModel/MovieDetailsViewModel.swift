@@ -17,6 +17,8 @@ protocol MovieDetailsViewModelOutput {
     var posterImage: Observable<Data?> { get }
     var isPosterImageHidden: Bool { get }
     var overview: String { get }
+    var rating: String { get }
+    var isRatingHidden: Bool { get }
 }
 
 protocol MovieDetailsViewModel: MovieDetailsViewModelInput, MovieDetailsViewModelOutput { }
@@ -32,6 +34,8 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
     let posterImage: Observable<Data?> = Observable(nil)
     let isPosterImageHidden: Bool
     let overview: String
+    let isRatingHidden: Bool
+    let rating: String
     
     init(movie: Movie,
          posterImagesRepository: PosterImagesRepository) {
@@ -40,6 +44,8 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
         self.posterImagePath = movie.posterPath
         self.isPosterImageHidden = movie.posterPath == nil
         self.posterImagesRepository = posterImagesRepository
+        self.rating = movie.voteAverage == nil ? "" : String(movie.voteAverage!)
+        self.isRatingHidden = movie.voteAverage == nil
     }
 }
 
