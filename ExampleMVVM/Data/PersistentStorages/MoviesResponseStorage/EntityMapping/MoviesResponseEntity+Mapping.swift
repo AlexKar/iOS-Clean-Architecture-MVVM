@@ -22,8 +22,12 @@ extension MovieResponseEntity {
                      title: title,
                      genre: MoviesResponseDTO.MovieDTO.GenreDTO(rawValue: genre ?? ""),
                      posterPath: posterPath,
+                     backdropPath: backdropPath,
                      overview: overview,
-                     releaseDate: releaseDate)
+                     releaseDate: releaseDate,
+                     popularity: popularity != nil ? Float(popularity!) : nil,
+                     voteAverage: voteAverage != nil ? Float(voteAverage!) : nil,
+                     voteCount: voteCount != nil ? Int(voteCount!) : nil )
     }
 }
 
@@ -55,8 +59,12 @@ extension MoviesResponseDTO.MovieDTO {
         entity.title = title
         entity.genre = genre?.rawValue
         entity.posterPath = posterPath
+        entity.backdropPath = backdropPath
         entity.overview = overview
         entity.releaseDate = releaseDate
+        entity.popularity = popularity != nil ? String(popularity!) : nil
+        entity.voteAverage = voteAverage != nil ? String(voteAverage!) : nil
+        entity.voteCount = voteCount != nil ? String(voteCount!) : nil
         return entity
     }
 }

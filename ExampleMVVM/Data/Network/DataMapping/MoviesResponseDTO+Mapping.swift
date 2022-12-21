@@ -28,8 +28,12 @@ extension MoviesResponseDTO {
             case title
             case genre
             case posterPath = "poster_path"
+            case backdropPath = "backdrop_path"
             case overview
             case releaseDate = "release_date"
+            case popularity
+            case voteAverage = "vote_average"
+            case voteCount = "vote_count"
         }
         enum GenreDTO: String, Decodable {
             case adventure
@@ -39,8 +43,12 @@ extension MoviesResponseDTO {
         let title: String?
         let genre: GenreDTO?
         let posterPath: String?
+        let backdropPath: String?
         let overview: String?
         let releaseDate: String?
+        let popularity: Float?
+        let voteAverage: Float?
+        let voteCount: Int?
     }
 }
 
@@ -60,8 +68,12 @@ extension MoviesResponseDTO.MovieDTO {
                      title: title,
                      genre: genre?.toDomain(),
                      posterPath: posterPath,
+                     backdropPath: backdropPath,
                      overview: overview,
-                     releaseDate: dateFormatter.date(from: releaseDate ?? ""))
+                     releaseDate: dateFormatter.date(from: releaseDate ?? ""),
+                     popularity: popularity,
+                     voteAverage: voteAverage,
+                     voteCount: voteCount)
     }
 }
 
