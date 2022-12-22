@@ -12,7 +12,9 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
 
     @IBOutlet private var posterImageView: UIImageView!
     @IBOutlet private var ratingLabel: UILabel!
+    @IBOutlet private var favoritesLabel: UILabel!
     @IBOutlet private var overviewTextView: UITextView!
+    @IBOutlet private var favoritesButton: UIButton!
 
     // MARK: - Lifecycle
 
@@ -32,11 +34,16 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
 
     private func bind(to viewModel: MovieDetailsViewModel) {
         viewModel.posterImage.observe(on: self) { [weak self] in self?.posterImageView.image = $0.flatMap(UIImage.init) }
+        viewModel.isFavoriteIconHidden.observe(on: self) { [weak self] in self?.updateIsFavoriteState($0) }
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         viewModel.updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width))
+    }
+    
+    @IBAction func didPressFavoritesButton(_ sender: AnyObject) {
+        viewModel.favoriteAction()
     }
 
     // MARK: - Private
@@ -51,6 +58,15 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
         
         overviewTextView.text = viewModel.overview
         posterImageView.isHidden = viewModel.isPosterImageHidden
+        
         view.accessibilityIdentifier = AccessibilityIdentifier.movieDetailsView
+    
+    }
+    
+    private func updateIsFavoriteState(_ isFavorite: Bool) {
+        favoritesLabel.isHidden = !isFavorite
+        
+        let buttonTitle = isFavorite ? "Remove from favorites" : "Add to favorites"
+        favoritesButton.setTitle(buttonTitle, for: .normal)
     }
 }

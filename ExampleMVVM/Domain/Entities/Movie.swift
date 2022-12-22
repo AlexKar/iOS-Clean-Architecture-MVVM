@@ -23,6 +23,7 @@ struct Movie: Equatable, Identifiable {
     let popularity: Float?
     let voteAverage: Float?
     let voteCount: Int?
+    let isFavorite: Bool
 }
 
 struct MoviesPage: Equatable {

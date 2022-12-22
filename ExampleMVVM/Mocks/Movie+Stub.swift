@@ -19,6 +19,7 @@ extension Movie {
               genre: genre,
               posterPath: posterPath,
               overview: overview,
-              releaseDate: releaseDate)
+              releaseDate: releaseDate,
+              isFavorite: false)
     }
 }

@@ -48,4 +48,12 @@ extension DefaultMoviesRepository: MoviesRepository {
         }
         return task
     }
+    
+    func updateMovie(_ movie: Movie) -> Cancellable? {
+        guard let movieDTO = MoviesResponseDTO.MovieDTO.fromDomain(movie: movie) else {
+            return nil
+        }
+        cache.update(movie: movieDTO)
+        return nil
+    }
 }

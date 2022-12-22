@@ -20,7 +20,7 @@ final class MoviesSceneDIContainer {
     // MARK: - Persistent Storage
     lazy var moviesQueriesStorage: MoviesQueriesStorage = CoreDataMoviesQueriesStorage(maxStorageLimit: 10)
     lazy var moviesResponseCache: MoviesResponseStorage = CoreDataMoviesResponseStorage()
-
+    
     init(dependencies: Dependencies) {
         self.dependencies = dependencies        
     }
@@ -37,6 +37,10 @@ final class MoviesSceneDIContainer {
                                               completion: completion,
                                               moviesQueriesRepository: makeMoviesQueriesRepository()
         )
+    }
+    
+    func makeMovieDetailsUseCase() -> MovieDetailsUseCase {
+        return DefaultMovieDetailsUseCase(moviesRepository: makeMoviesRepository())
     }
     
     // MARK: - Repositories
@@ -63,12 +67,14 @@ final class MoviesSceneDIContainer {
     }
     
     // MARK: - Movie Details
-    func makeMoviesDetailsViewController(movie: Movie) -> UIViewController {
-        return MovieDetailsViewController.create(with: makeMoviesDetailsViewModel(movie: movie))
+    func makeMoviesDetailsViewController(movie: Movie, listener: MoviesListListener) -> UIViewController {
+        return MovieDetailsViewController.create(with: makeMoviesDetailsViewModel(movie: movie, listener: listener))
     }
     
-    func makeMoviesDetailsViewModel(movie: Movie) -> MovieDetailsViewModel {
+    func makeMoviesDetailsViewModel(movie: Movie, listener: MoviesListListener) -> MovieDetailsViewModel {
         return DefaultMovieDetailsViewModel(movie: movie,
+                                            listener: listener,
+                                            movieDetailsUseCase: makeMovieDetailsUseCase(),
                                             posterImagesRepository: makePosterImagesRepository())
     }
     

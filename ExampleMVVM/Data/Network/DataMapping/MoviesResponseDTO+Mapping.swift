@@ -34,6 +34,7 @@ extension MoviesResponseDTO {
             case popularity
             case voteAverage = "vote_average"
             case voteCount = "vote_count"
+            case isFavorite = "is_favorite"
         }
         enum GenreDTO: String, Decodable {
             case adventure
@@ -49,6 +50,39 @@ extension MoviesResponseDTO {
         let popularity: Float?
         let voteAverage: Float?
         let voteCount: Int?
+        let isFavorite: Bool?
+    }
+}
+
+// MARK: - Mappings to Domain
+
+extension MoviesResponseDTO.MovieDTO {
+    static func fromDomain(movie: Movie) -> Self? {
+        guard let id = Int(movie.id) else {
+            return nil
+        }
+        return MoviesResponseDTO.MovieDTO(
+            id: id,
+            title: movie.title,
+            genre: .fromDomain(genre: movie.genre),
+            posterPath: movie.posterPath,
+            backdropPath: movie.backdropPath,
+            overview: movie.overview,
+            releaseDate: movie.releaseDate != nil ? dateFormatter.string(from: movie.releaseDate!) : nil,
+            popularity: movie.popularity,
+            voteAverage: movie.voteAverage,
+            voteCount: movie.voteCount,
+            isFavorite: movie.isFavorite)
+    }
+}
+
+extension MoviesResponseDTO.MovieDTO.GenreDTO {
+    static func fromDomain(genre: Movie.Genre?) -> Self? {
+        guard let genre = genre else { return nil }
+        switch genre {
+        case .adventure: return .adventure
+        case .scienceFiction: return .scienceFiction
+        }
     }
 }
 
@@ -73,7 +107,8 @@ extension MoviesResponseDTO.MovieDTO {
                      releaseDate: dateFormatter.date(from: releaseDate ?? ""),
                      popularity: popularity,
                      voteAverage: voteAverage,
-                     voteCount: voteCount)
+                     voteCount: voteCount,
+                     isFavorite: isFavorite ?? false)
     }
 }
 

@@ -11,10 +11,12 @@ protocol SearchMoviesUseCase {
     func execute(requestValue: SearchMoviesUseCaseRequestValue,
                  cached: @escaping (MoviesPage) -> Void,
                  completion: @escaping (Result<MoviesPage, Error>) -> Void) -> Cancellable?
+    func update(requestValue: SearchMoviesUseCaseRequestValue,
+                completion: @escaping (MoviesPage) -> Void)
 }
 
 final class DefaultSearchMoviesUseCase: SearchMoviesUseCase {
-
+    
     private let moviesRepository: MoviesRepository
     private let moviesQueriesRepository: MoviesQueriesRepository
 
@@ -40,6 +42,13 @@ final class DefaultSearchMoviesUseCase: SearchMoviesUseCase {
 
             completion(result)
         })
+    }
+    
+    func update(requestValue: SearchMoviesUseCaseRequestValue, completion: @escaping (MoviesPage) -> Void) {
+        moviesRepository.fetchMoviesList(query: requestValue.query,
+                                          page: requestValue.page,
+                                        cached: completion,
+                                    completion: { _ in })
     }
 }
 

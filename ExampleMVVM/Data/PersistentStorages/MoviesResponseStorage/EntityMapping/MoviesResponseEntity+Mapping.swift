@@ -27,7 +27,8 @@ extension MovieResponseEntity {
                      releaseDate: releaseDate,
                      popularity: popularity != nil ? Float(popularity!) : nil,
                      voteAverage: voteAverage != nil ? Float(voteAverage!) : nil,
-                     voteCount: voteCount != nil ? Int(voteCount!) : nil )
+                     voteCount: voteCount != nil ? Int(voteCount!) : nil,
+                     isFavorite: isFavorite)
     }
 }
 
