@@ -63,10 +63,10 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
     
     }
     
-    private func updateIsFavoriteState(_ isFavorite: Bool) {
-        favoritesLabel.isHidden = !isFavorite
+    private func updateIsFavoriteState(_ isHidden: Bool) {
+        favoritesLabel.isHidden = isHidden
         
-        let buttonTitle = isFavorite ? "Remove from favorites" : "Add to favorites"
+        let buttonTitle = !isHidden ? "Remove from favorites" : "Add to favorites"
         favoritesButton.setTitle(buttonTitle, for: .normal)
     }
 }

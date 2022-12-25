@@ -60,7 +60,6 @@ final class CoreDataMoviesResponseStorage {
                 result.popularity = movie.popularity != nil ? String(movie.popularity!) : nil
                 result.voteAverage = movie.voteAverage != nil ? String(movie.voteAverage!) : nil
                 result.voteCount = movie.voteCount != nil ? String(movie.voteCount!) : nil
-                result.isFavorite = movie.isFavorite ?? false
                 
                 try context.save()
             }
@@ -99,12 +98,6 @@ extension CoreDataMoviesResponseStorage: MoviesResponseStorage {
                 // TODO: - Log to Crashlytics
                 debugPrint("CoreDataMoviesResponseStorage Unresolved error \(error), \((error as NSError).userInfo)")
             }
-        }
-    }
-    
-    func update(movie: MoviesResponseDTO.MovieDTO) {
-        coreDataStorage.performBackgroundTask { context in
-            self.updateMovie(movie, in: context)
         }
     }
 }

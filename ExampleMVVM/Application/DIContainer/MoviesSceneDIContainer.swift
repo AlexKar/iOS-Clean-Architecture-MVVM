@@ -21,13 +21,18 @@ final class MoviesSceneDIContainer {
     lazy var moviesQueriesStorage: MoviesQueriesStorage = CoreDataMoviesQueriesStorage(maxStorageLimit: 10)
     lazy var moviesResponseCache: MoviesResponseStorage = CoreDataMoviesResponseStorage()
     
+    lazy var moviesRepository: any MoviesRepository = DefaultMoviesRepository(
+        dataTransferService: dependencies.apiDataTransferService,
+        cache: moviesResponseCache,
+        favoritesCache: makeFavoriteMoviesStorage())
+    
     init(dependencies: Dependencies) {
         self.dependencies = dependencies        
     }
     
     // MARK: - Use Cases
-    func makeSearchMoviesUseCase() -> SearchMoviesUseCase {
-        return DefaultSearchMoviesUseCase(moviesRepository: makeMoviesRepository(),
+    func makeSearchMoviesUseCase() -> any SearchMoviesUseCase {
+        return DefaultSearchMoviesUseCase(moviesRepository: moviesRepository,
                                           moviesQueriesRepository: makeMoviesQueriesRepository())
     }
     
@@ -39,20 +44,22 @@ final class MoviesSceneDIContainer {
         )
     }
     
-    func makeMovieDetailsUseCase() -> MovieDetailsUseCase {
-        return DefaultMovieDetailsUseCase(moviesRepository: makeMoviesRepository())
+    func makeMovieDetailsUseCase() -> any MovieDetailsUseCase {
+        return DefaultMovieDetailsUseCase(moviesRepository: moviesRepository)
     }
     
     // MARK: - Repositories
-    func makeMoviesRepository() -> MoviesRepository {
-        return DefaultMoviesRepository(dataTransferService: dependencies.apiDataTransferService, cache: moviesResponseCache)
-    }
+
     func makeMoviesQueriesRepository() -> MoviesQueriesRepository {
         return DefaultMoviesQueriesRepository(dataTransferService: dependencies.apiDataTransferService,
                                               moviesQueriesPersistentStorage: moviesQueriesStorage)
     }
     func makePosterImagesRepository() -> PosterImagesRepository {
         return DefaultPosterImagesRepository(dataTransferService: dependencies.imageDataTransferService)
+    }
+    
+    func makeFavoriteMoviesStorage() -> FavoriteMoviesStorage {
+        return UserDefaultsFavoriteMoviesStorage()
     }
     
     // MARK: - Movies List

@@ -7,21 +7,38 @@
 
 import Foundation
 
-protocol MovieDetailsUseCase {
-    func updateMovie(_ movie: Movie)
+protocol MovieDetailsUseCaseDelegate: AnyObject {
+    func didUpdateMovies(_ movies: [Movie])
 }
 
-final class DefaultMovieDetailsUseCase: MovieDetailsUseCase {
-    
-    private let moviesRepository: MoviesRepository
+protocol MovieDetailsUseCase: Delegatable where T == MovieDetailsUseCaseDelegate {
+    func markMovie(_ movie: Movie, isFavorite: Bool)
+}
 
-    init(moviesRepository: MoviesRepository) {
+final class DefaultMovieDetailsUseCase: DelegatesStorage<MovieDetailsUseCaseDelegate>, MovieDetailsUseCase {
+    
+    private let moviesRepository: any MoviesRepository
+
+    init(moviesRepository: any MoviesRepository) {
         self.moviesRepository = moviesRepository
+        
+        super.init()
+        self.moviesRepository.addDelegate(self)
+    }
+    
+    deinit {
+        self.moviesRepository.removeDelegate(self)
     }
     
     // MARK: - MovieDetailsUseCase
     
-    func updateMovie(_ movie: Movie) {
-        moviesRepository.updateMovie(movie)
+    func markMovie(_ movie: Movie, isFavorite: Bool) {
+        moviesRepository.markMovie(movie, isFavorite: isFavorite)
+    }
+}
+
+extension DefaultMovieDetailsUseCase: MoviesRepositoryDelegate {
+    func didUpdateMovies(_ movies: [Movie]) {
+        notify(using: { $0.didUpdateMovies(movies) })
     }
 }

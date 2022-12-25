@@ -7,24 +7,34 @@
 
 import Foundation
 
-protocol SearchMoviesUseCase {
+protocol SearchMoviesUseCaseDelegate: AnyObject {
+    func didUpdateMovies(_ movies: [Movie])
+}
+
+protocol SearchMoviesUseCase: Delegatable where T == SearchMoviesUseCaseDelegate {
     func execute(requestValue: SearchMoviesUseCaseRequestValue,
                  cached: @escaping (MoviesPage) -> Void,
                  completion: @escaping (Result<MoviesPage, Error>) -> Void) -> Cancellable?
-    func update(requestValue: SearchMoviesUseCaseRequestValue,
-                completion: @escaping (MoviesPage) -> Void)
 }
 
-final class DefaultSearchMoviesUseCase: SearchMoviesUseCase {
+final class DefaultSearchMoviesUseCase: DelegatesStorage<SearchMoviesUseCaseDelegate>, SearchMoviesUseCase {
     
-    private let moviesRepository: MoviesRepository
+    private let moviesRepository: any MoviesRepository
     private let moviesQueriesRepository: MoviesQueriesRepository
 
-    init(moviesRepository: MoviesRepository,
+    init(moviesRepository: any MoviesRepository,
          moviesQueriesRepository: MoviesQueriesRepository) {
 
         self.moviesRepository = moviesRepository
         self.moviesQueriesRepository = moviesQueriesRepository
+        
+        super.init()
+        
+        self.moviesRepository.addDelegate(self)
+    }
+    
+    deinit {
+        self.moviesRepository.removeDelegate(self)
     }
 
     func execute(requestValue: SearchMoviesUseCaseRequestValue,
@@ -44,11 +54,11 @@ final class DefaultSearchMoviesUseCase: SearchMoviesUseCase {
         })
     }
     
-    func update(requestValue: SearchMoviesUseCaseRequestValue, completion: @escaping (MoviesPage) -> Void) {
-        moviesRepository.fetchMoviesList(query: requestValue.query,
-                                          page: requestValue.page,
-                                        cached: completion,
-                                    completion: { _ in })
+}
+
+extension DefaultSearchMoviesUseCase: MoviesRepositoryDelegate {
+    func didUpdateMovies(_ movies: [Movie]) {
+        notify(using: { $0.didUpdateMovies(movies) })
     }
 }
 

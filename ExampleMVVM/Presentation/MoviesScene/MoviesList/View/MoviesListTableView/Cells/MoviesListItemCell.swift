@@ -16,10 +16,18 @@ final class MoviesListItemCell: UITableViewCell {
     @IBOutlet private var dateLabel: UILabel!
     @IBOutlet private var overviewLabel: UILabel!
     @IBOutlet private var posterImageView: UIImageView!
+    @IBOutlet private var isFavoriteLabel: UILabel!
 
     private var viewModel: MoviesListItemViewModel!
     private var posterImagesRepository: PosterImagesRepository?
     private var imageLoadTask: Cancellable? { willSet { imageLoadTask?.cancel() } }
+        
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        
+        isFavoriteLabel.layer.cornerRadius = 8.0
+        isFavoriteLabel.clipsToBounds = true
+    }
 
     func fill(with viewModel: MoviesListItemViewModel, posterImagesRepository: PosterImagesRepository?) {
         self.viewModel = viewModel
@@ -28,6 +36,9 @@ final class MoviesListItemCell: UITableViewCell {
         titleLabel.text = viewModel.title
         dateLabel.text = viewModel.releaseDate
         overviewLabel.text = viewModel.overview
+        
+        isFavoriteLabel.isHidden = !viewModel.isFavorite
+        
         updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width))
     }
 

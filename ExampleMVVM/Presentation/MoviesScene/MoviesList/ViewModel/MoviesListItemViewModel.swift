@@ -13,6 +13,7 @@ struct MoviesListItemViewModel: Equatable {
     let overview: String
     let releaseDate: String
     let posterImagePath: String?
+    let isFavorite: Bool
 }
 
 extension MoviesListItemViewModel {
@@ -26,6 +27,7 @@ extension MoviesListItemViewModel {
         } else {
             self.releaseDate = NSLocalizedString("To be announced", comment: "")
         }
+        self.isFavorite = movie.isFavorite
     }
 }
 

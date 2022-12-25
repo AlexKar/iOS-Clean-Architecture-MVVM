@@ -34,7 +34,6 @@ extension MoviesResponseDTO {
             case popularity
             case voteAverage = "vote_average"
             case voteCount = "vote_count"
-            case isFavorite = "is_favorite"
         }
         enum GenreDTO: String, Decodable {
             case adventure
@@ -50,7 +49,6 @@ extension MoviesResponseDTO {
         let popularity: Float?
         let voteAverage: Float?
         let voteCount: Int?
-        let isFavorite: Bool?
     }
 }
 
@@ -71,8 +69,7 @@ extension MoviesResponseDTO.MovieDTO {
             releaseDate: movie.releaseDate != nil ? dateFormatter.string(from: movie.releaseDate!) : nil,
             popularity: movie.popularity,
             voteAverage: movie.voteAverage,
-            voteCount: movie.voteCount,
-            isFavorite: movie.isFavorite)
+            voteCount: movie.voteCount)
     }
 }
 
@@ -89,15 +86,22 @@ extension MoviesResponseDTO.MovieDTO.GenreDTO {
 // MARK: - Mappings to Domain
 
 extension MoviesResponseDTO {
-    func toDomain() -> MoviesPage {
+    func toDomain(isFavoriteIds: [String]?) -> MoviesPage {
+        let ids = isFavoriteIds?.compactMap { Int($0) }
         return .init(page: page,
                      totalPages: totalPages,
-                     movies: movies.map { $0.toDomain() })
+                     movies: movies.map {
+                         var isFavorite = false
+                         if let ids = ids, ids.contains($0.id) {
+                             isFavorite = true
+                         }
+                         return $0.toDomain(isFavorite: isFavorite)
+                     })
     }
 }
 
 extension MoviesResponseDTO.MovieDTO {
-    func toDomain() -> Movie {
+    func toDomain(isFavorite: Bool) -> Movie {
         return .init(id: Movie.Identifier(id),
                      title: title,
                      genre: genre?.toDomain(),
@@ -108,7 +112,7 @@ extension MoviesResponseDTO.MovieDTO {
                      popularity: popularity,
                      voteAverage: voteAverage,
                      voteCount: voteCount,
-                     isFavorite: isFavorite ?? false)
+                     isFavorite: isFavorite)
     }
 }
 

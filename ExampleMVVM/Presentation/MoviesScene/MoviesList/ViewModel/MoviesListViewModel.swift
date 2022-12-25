@@ -50,7 +50,7 @@ protocol MoviesListViewModel: MoviesListViewModelInput, MoviesListViewModelOutpu
 
 final class DefaultMoviesListViewModel: MoviesListViewModel {
 
-    private let searchMoviesUseCase: SearchMoviesUseCase
+    private let searchMoviesUseCase: any SearchMoviesUseCase
     private let actions: MoviesListViewModelActions?
 
     var currentPage: Int = 0
@@ -58,7 +58,8 @@ final class DefaultMoviesListViewModel: MoviesListViewModel {
     var hasMorePages: Bool { currentPage < totalPageCount }
     var nextPage: Int { hasMorePages ? currentPage + 1 : currentPage }
 
-    private var pages: [MoviesPage] = []
+    private var pages: [Int:MoviesPage] = [:]
+    private var movies: [String:Int] = [:]
     private var moviesLoadTask: Cancellable? { willSet { moviesLoadTask?.cancel() } }
 
     // MARK: - OUTPUT
@@ -75,10 +76,16 @@ final class DefaultMoviesListViewModel: MoviesListViewModel {
 
     // MARK: - Init
 
-    init(searchMoviesUseCase: SearchMoviesUseCase,
+    init(searchMoviesUseCase: any SearchMoviesUseCase,
          actions: MoviesListViewModelActions? = nil) {
         self.searchMoviesUseCase = searchMoviesUseCase
         self.actions = actions
+        
+        self.searchMoviesUseCase.addDelegate(self)
+    }
+    
+    deinit {
+        self.searchMoviesUseCase.removeDelegate(self)
     }
 
     // MARK: - Private
@@ -87,10 +94,13 @@ final class DefaultMoviesListViewModel: MoviesListViewModel {
         currentPage = moviesPage.page
         totalPageCount = moviesPage.totalPages
 
-        pages = pages
-            .filter { $0.page != moviesPage.page }
-            + [moviesPage]
+        pages[moviesPage.page] = moviesPage
+        moviesPage.movies.forEach { self.movies[$0.id] = moviesPage.page }
 
+        updateMovieItems()
+    }
+    
+    private func updateMovieItems() {
         items.value = pages.movies.map(MoviesListItemViewModel.init)
     }
 
@@ -165,21 +175,36 @@ extension DefaultMoviesListViewModel {
     }
 }
 
+// MARK: - SearchMoviesUseCaseDelegate
+
+extension DefaultMoviesListViewModel : SearchMoviesUseCaseDelegate {
+    
+    func didUpdateMovies(_ movies: [Movie]) {
+        movies.forEach { movie in
+            guard let index = self.movies[movie.id], let page = self.pages[index] else { return }
+            let modifiedMovies = page.movies.map { $0.id == movie.id ? movie : $0 }
+            let modifiedPage = MoviesPage(page: page.page, totalPages: page.totalPages, movies: modifiedMovies)
+            self.pages[page.page] = modifiedPage
+        }
+        updateMovieItems()
+    }
+
+}
+
 // MARK: - Listener
 
 extension DefaultMoviesListViewModel {
     
     func refreshList() {
-        resetPages()
-        let query = MovieQuery(query: query.value)
-        searchMoviesUseCase.update(
-            requestValue: .init(query: query, page: nextPage),
-            completion: appendPage)
+    
     }
 }
 
 // MARK: - Private
 
-private extension Array where Element == MoviesPage {
-    var movies: [Movie] { flatMap { $0.movies } }
+private extension Dictionary where Key == Int, Value == MoviesPage {
+    var movies: [Movie] {
+        let movies = self.keys.sorted().compactMap { self[$0]?.movies }
+        return movies.flatMap { $0 }
+    }
 }

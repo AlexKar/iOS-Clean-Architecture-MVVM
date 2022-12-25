@@ -29,8 +29,8 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
     
     private weak var listener: MoviesListListener?
     
-    private let movieDetailsUseCase: MovieDetailsUseCase
-    private let movie: Movie
+    private let movieDetailsUseCase: any MovieDetailsUseCase
+    private var movie: Movie
     
     private let posterImagePath: String?
     private let posterImagesRepository: PosterImagesRepository
@@ -47,7 +47,7 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
     
     init(movie: Movie,
          listener: MoviesListListener,
-         movieDetailsUseCase: MovieDetailsUseCase,
+         movieDetailsUseCase: any MovieDetailsUseCase,
          posterImagesRepository: PosterImagesRepository) {
         self.movie = movie
         self.listener = listener
@@ -60,7 +60,17 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
         self.posterImagesRepository = posterImagesRepository
         self.rating = movie.voteAverage == nil ? "" : String(movie.voteAverage!)
         self.isRatingHidden = movie.voteAverage == nil
-        self.isFavoriteIconHidden = Observable(movie.isFavorite)
+        self.isFavoriteIconHidden = Observable(!movie.isFavorite)
+        
+        self.movieDetailsUseCase.addDelegate(self)
+    }
+    
+    deinit {
+        self.movieDetailsUseCase.removeDelegate(self)
+    }
+    
+    private func updateUI() {
+        isFavoriteIconHidden.value = !movie.isFavorite
     }
 }
 
@@ -82,25 +92,15 @@ extension DefaultMovieDetailsViewModel {
     }
     
     func favoriteAction() {
-        let isFavorite = !isFavoriteIconHidden.value
-        
-        let movie = Movie(
-            id: movie.id,
-            title: movie.title,
-            genre: movie.genre,
-            posterPath: movie.posterPath,
-            backdropPath: movie.backdropPath,
-            overview: movie.overview,
-            releaseDate: movie.releaseDate,
-            popularity: movie.popularity,
-            voteAverage: movie.voteAverage,
-            voteCount: movie.voteCount,
-            isFavorite: isFavorite)
-        
-        movieDetailsUseCase.updateMovie(movie)
-        isFavoriteIconHidden.value = isFavorite
-        
-        listener?.refreshList()
+        let isFavorite = isFavoriteIconHidden.value
+        movieDetailsUseCase.markMovie(movie, isFavorite: isFavorite)
     }
-    
+}
+
+extension DefaultMovieDetailsViewModel: MovieDetailsUseCaseDelegate {
+    func didUpdateMovies(_ movies: [Movie]) {
+        guard let movie = movies.first(where: { $0.id == movie.id }) else { return }
+        self.movie = movie
+        updateUI()
+    }
 }

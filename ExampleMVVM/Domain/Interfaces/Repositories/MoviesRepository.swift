@@ -7,12 +7,17 @@
 
 import Foundation
 
-protocol MoviesRepository {
+protocol MoviesRepositoryDelegate: AnyObject {
+    func didUpdateMovies(_ movies: [Movie])
+}
+
+protocol MoviesRepository: Delegatable where T == MoviesRepositoryDelegate {
+    
     @discardableResult
     func fetchMoviesList(query: MovieQuery, page: Int,
                          cached: @escaping (MoviesPage) -> Void,
                          completion: @escaping (Result<MoviesPage, Error>) -> Void) -> Cancellable?
     
     @discardableResult
-    func updateMovie(_ movie: Movie) -> Cancellable?
+    func markMovie(_ movie: Movie, isFavorite: Bool) -> Cancellable?
 }
