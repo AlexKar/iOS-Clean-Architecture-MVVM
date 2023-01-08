@@ -10,7 +10,7 @@ import Foundation
 struct MoviesListViewModelActions {
     /// Note: if you would need to edit movie inside Details screen and update this Movies List screen with updated movie then you would need this closure:
     /// showMovieDetails: (Movie, @escaping (_ updated: Movie) -> Void) -> Void
-    let showMovieDetails: (Movie, MoviesListListener) -> Void
+    let showMovieDetails: (Movie) -> Void
     let showMovieQueriesSuggestions: (@escaping (_ didSelect: MovieQuery) -> Void) -> Void
     let closeMovieQueriesSuggestions: () -> Void
 }
@@ -18,10 +18,6 @@ struct MoviesListViewModelActions {
 enum MoviesListViewModelLoading {
     case fullScreen
     case nextPage
-}
-
-protocol MoviesListListener: AnyObject {
-    func refreshList()
 }
 
 protocol MoviesListViewModelInput {
@@ -46,7 +42,7 @@ protocol MoviesListViewModelOutput {
     var searchBarPlaceholder: String { get }
 }
 
-protocol MoviesListViewModel: MoviesListViewModelInput, MoviesListViewModelOutput, MoviesListListener {}
+protocol MoviesListViewModel: MoviesListViewModelInput, MoviesListViewModelOutput {}
 
 final class DefaultMoviesListViewModel: MoviesListViewModel {
 
@@ -171,7 +167,7 @@ extension DefaultMoviesListViewModel {
     }
 
     func didSelectItem(at index: Int) {
-        actions?.showMovieDetails(pages.movies[index], self)
+        actions?.showMovieDetails(pages.movies[index])
     }
 }
 

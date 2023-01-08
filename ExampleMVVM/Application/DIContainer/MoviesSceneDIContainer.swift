@@ -74,15 +74,17 @@ final class MoviesSceneDIContainer {
     }
     
     // MARK: - Movie Details
-    func makeMoviesDetailsViewController(movie: Movie, listener: MoviesListListener) -> UIViewController {
-        return MovieDetailsViewController.create(with: makeMoviesDetailsViewModel(movie: movie, listener: listener))
+    func makeMoviesDetailsViewController(movie: Movie) -> UIViewController {
+        let intent = makeMoviesDetailsIntent(movie: movie)
+        let view = MovieDetailsViewController.create(with: intent)
+        intent.connect(to: view)
+        return view
     }
     
-    func makeMoviesDetailsViewModel(movie: Movie, listener: MoviesListListener) -> MovieDetailsViewModel {
-        return DefaultMovieDetailsViewModel(movie: movie,
-                                            listener: listener,
-                                            movieDetailsUseCase: makeMovieDetailsUseCase(),
-                                            posterImagesRepository: makePosterImagesRepository())
+    func makeMoviesDetailsIntent(movie: Movie) -> MovieDetailsIntent {
+        return MovieDetailsIntent(movie: movie,
+                                  movieDetailsUseCase: makeMovieDetailsUseCase(),
+                                  posterImagesRepository: makePosterImagesRepository())
     }
     
     // MARK: - Movies Queries Suggestions List

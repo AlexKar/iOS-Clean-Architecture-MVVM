@@ -37,37 +37,6 @@ final class CoreDataMoviesResponseStorage {
             print(error)
         }
     }
-    
-    private func fetchMovie(for responseDto: MoviesResponseDTO.MovieDTO) -> NSFetchRequest<MovieResponseEntity> {
-        let request: NSFetchRequest = MovieResponseEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "%K = %d",
-                                        #keyPath(MovieResponseEntity.id), responseDto.id)
-        return request
-    }
-    
-    private func updateMovie(_ movie: MoviesResponseDTO.MovieDTO, in context: NSManagedObjectContext) {
-        let request = fetchMovie(for: movie)
-        do {
-            if let result = try context.fetch(request).first {
-                
-                result.id = Int64(movie.id)
-                result.title = movie.title
-                result.genre = movie.genre?.rawValue
-                result.posterPath = movie.posterPath
-                result.backdropPath = movie.backdropPath
-                result.overview = movie.overview
-                result.releaseDate = movie.releaseDate
-                result.popularity = movie.popularity != nil ? String(movie.popularity!) : nil
-                result.voteAverage = movie.voteAverage != nil ? String(movie.voteAverage!) : nil
-                result.voteCount = movie.voteCount != nil ? String(movie.voteCount!) : nil
-                
-                try context.save()
-            }
-            
-        } catch {
-            print(error)
-        }
-    }
 }
 
 extension CoreDataMoviesResponseStorage: MoviesResponseStorage {

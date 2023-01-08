@@ -9,7 +9,7 @@
 import UIKit
 
 final class MovieDetailsViewController: UIViewController, StoryboardInstantiable {
-
+    
     @IBOutlet private var posterImageView: UIImageView!
     @IBOutlet private var ratingLabel: UILabel!
     @IBOutlet private var favoritesLabel: UILabel!
@@ -18,46 +18,35 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
 
     // MARK: - Lifecycle
 
-    private var viewModel: MovieDetailsViewModel!
+    private var actionsHandler: Actionable?
     
-    static func create(with viewModel: MovieDetailsViewModel) -> MovieDetailsViewController {
+    static func create(with actionsHandler: Actionable) -> MovieDetailsViewController {
         let view = MovieDetailsViewController.instantiateViewController()
-        view.viewModel = viewModel
+        view.actionsHandler = actionsHandler
         return view
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
-        bind(to: viewModel)
+        actionsHandler?.load()
     }
 
-    private func bind(to viewModel: MovieDetailsViewModel) {
-        viewModel.posterImage.observe(on: self) { [weak self] in self?.posterImageView.image = $0.flatMap(UIImage.init) }
-        viewModel.isFavoriteIconHidden.observe(on: self) { [weak self] in self?.updateIsFavoriteState($0) }
-    }
-    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        viewModel.updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width))
+        actionsHandler?.dispatch(MovieDetailsAction.updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width)))
     }
     
     @IBAction func didPressFavoritesButton(_ sender: AnyObject) {
-        viewModel.favoriteAction()
+        actionsHandler?.dispatch(MovieDetailsAction.favoriteButtonPressed)
     }
 
     // MARK: - Private
 
     private func setupViews() {
-        title = viewModel.title
         
         ratingLabel.clipsToBounds = true
         ratingLabel.layer.cornerRadius = 5.0
-        ratingLabel.isHidden = viewModel.isRatingHidden
-        ratingLabel.text = viewModel.rating
-        
-        overviewTextView.text = viewModel.overview
-        posterImageView.isHidden = viewModel.isPosterImageHidden
         
         view.accessibilityIdentifier = AccessibilityIdentifier.movieDetailsView
     
@@ -68,5 +57,25 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
         
         let buttonTitle = !isHidden ? "Remove from favorites" : "Add to favorites"
         favoritesButton.setTitle(buttonTitle, for: .normal)
+    }
+}
+
+extension MovieDetailsViewController: Viewable {
+    
+    func update(with state: MovieDetailsState) {
+        
+        title = state.title
+        
+        ratingLabel.isHidden = state.rating == nil
+        ratingLabel.text = state.rating
+        
+        overviewTextView.text = state.overview
+        
+        if let data = state.posterImage {
+            posterImageView.image = UIImage(data: data)
+        }
+        posterImageView.isHidden = state.posterImage == nil
+        
+        updateIsFavoriteState(!state.isFavorite)
     }
 }
