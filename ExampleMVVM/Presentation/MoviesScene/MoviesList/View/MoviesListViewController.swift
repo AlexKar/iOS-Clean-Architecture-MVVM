@@ -15,7 +15,7 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
     @IBOutlet private var searchBarContainer: UIView!
     @IBOutlet private var emptyDataLabel: UILabel!
     
-    private var viewModel: MoviesListViewModel!
+    private var actionsHandler: Actionable?
     private var posterImagesRepository: PosterImagesRepository?
 
     private var moviesTableViewController: MoviesListTableViewController?
@@ -23,10 +23,10 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
 
     // MARK: - Lifecycle
 
-    static func create(with viewModel: MoviesListViewModel,
+    static func create(with actionsHandler: Actionable,
                        posterImagesRepository: PosterImagesRepository?) -> MoviesListViewController {
         let view = MoviesListViewController.instantiateViewController()
-        view.viewModel = viewModel
+        view.actionsHandler = actionsHandler
         view.posterImagesRepository = posterImagesRepository
         return view
     }
@@ -35,15 +35,8 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
         super.viewDidLoad()
         setupViews()
         setupBehaviours()
-        bind(to: viewModel)
-        viewModel.viewDidLoad()
-    }
-
-    private func bind(to viewModel: MoviesListViewModel) {
-        viewModel.items.observe(on: self) { [weak self] _ in self?.updateItems() }
-        viewModel.loading.observe(on: self) { [weak self] in self?.updateLoading($0) }
-        viewModel.query.observe(on: self) { [weak self] in self?.updateSearchQuery($0) }
-        viewModel.error.observe(on: self) { [weak self] in self?.showError($0) }
+        
+        actionsHandler?.load()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -55,7 +48,7 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
         if segue.identifier == String(describing: MoviesListTableViewController.self),
             let destinationVC = segue.destination as? MoviesListTableViewController {
             moviesTableViewController = destinationVC
-            moviesTableViewController?.viewModel = viewModel
+            moviesTableViewController?.actionsHandler = actionsHandler
             moviesTableViewController?.posterImagesRepository = posterImagesRepository
         }
     }
@@ -63,8 +56,6 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
     // MARK: - Private
 
     private func setupViews() {
-        title = viewModel.screenTitle
-        emptyDataLabel.text = viewModel.emptyDataTitle
         setupSearchController()
     }
 
@@ -73,11 +64,12 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
                       BlackStyleNavigationBarBehavior()])
     }
 
-    private func updateItems() {
-        moviesTableViewController?.reload()
+    private func updateItems(_ items: [MoviesListItemState]) {
+        guard self.moviesTableViewController?.items != items else { return }
+        moviesTableViewController?.reload(withItems: items)
     }
 
-    private func updateLoading(_ loading: MoviesListViewModelLoading?) {
+    private func updateLoading(_ loading: MoviesListLoadingState?, isEmpty: Bool) {
         emptyDataLabel.isHidden = true
         moviesListContainer.isHidden = true
         suggestionsListContainer.isHidden = true
@@ -87,8 +79,8 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
         case .fullScreen: LoadingView.show()
         case .nextPage: moviesListContainer.isHidden = false
         case .none:
-            moviesListContainer.isHidden = viewModel.isEmpty
-            emptyDataLabel.isHidden = !viewModel.isEmpty
+            moviesListContainer.isHidden = isEmpty
+            emptyDataLabel.isHidden = !isEmpty
         }
 
         moviesTableViewController?.updateLoading(loading)
@@ -97,30 +89,48 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
 
     private func updateQueriesSuggestions() {
         guard searchController.searchBar.isFirstResponder else {
-            viewModel.closeQueriesSuggestions()
+            actionsHandler?.dispatch(MoviesListAction.closeQueriesSuggestions)
             return
         }
-        viewModel.showQueriesSuggestions()
+        actionsHandler?.dispatch(MoviesListAction.showQueriesSuggestions)
     }
 
     private func updateSearchQuery(_ query: String) {
         searchController.isActive = false
         searchController.searchBar.text = query
     }
-
-    private func showError(_ error: String) {
-        guard !error.isEmpty else { return }
-        showAlert(title: viewModel.errorTitle, message: error)
+    
+    private func updateTitles(_ titles: MoviesListTitlesState) {
+        title = titles.screenTitle
+        emptyDataLabel.text = titles.emptyDataTitle
+        searchController.searchBar.placeholder = titles.searchBarPlaceholder
     }
+
+    private func showError(_ error: MoviesListErrorState?) {
+        guard let error = error else { return }
+        showAlert(title: error.errorTitle, message: error.error)
+    }
+}
+
+extension MoviesListViewController: Viewable {
+    
+    func update(with state: MoviesListState) {
+        updateTitles(state.titles)
+        updateLoading(state.loading, isEmpty: state.items.isEmpty)
+        showError(state.error)
+        updateSearchQuery(state.query)
+        updateItems(state.items)
+    }
+    
 }
 
 // MARK: - Search Controller
 
 extension MoviesListViewController {
+    
     private func setupSearchController() {
         searchController.delegate = self
         searchController.searchBar.delegate = self
-        searchController.searchBar.placeholder = viewModel.searchBarPlaceholder
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.translatesAutoresizingMaskIntoConstraints = true
         searchController.searchBar.barStyle = .black
@@ -139,11 +149,11 @@ extension MoviesListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         guard let searchText = searchBar.text, !searchText.isEmpty else { return }
         searchController.isActive = false
-        viewModel.didSearch(query: searchText)
+        actionsHandler?.dispatch(MoviesListAction.search(query: searchText))
     }
 
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        viewModel.didCancelSearch()
+        actionsHandler?.dispatch(MoviesListAction.cancelSearch)
     }
 }
 

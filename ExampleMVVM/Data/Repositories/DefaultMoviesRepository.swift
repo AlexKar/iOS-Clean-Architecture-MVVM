@@ -30,6 +30,18 @@ extension DefaultMoviesRepository: MoviesRepository {
     public func fetchMoviesList(query: MovieQuery, page: Int,
                                 cached: @escaping (MoviesPage) -> Void,
                                 completion: @escaping (Result<MoviesPage, Error>) -> Void) -> Cancellable? {
+        
+        let safeCached: (MoviesPage) -> Void  = { page in
+            DispatchQueue.main.async {
+                cached(page)
+            }
+        }
+        
+        let safeCompletion: (Result<MoviesPage, Error>) -> Void = { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
 
         let requestDTO = MoviesRequestDTO(query: query.query, page: page)
         let task = RepositoryTask()
@@ -39,7 +51,8 @@ extension DefaultMoviesRepository: MoviesRepository {
             
             self.cache.getResponse(for: requestDTO) { result in
                 if case let .success(responseDTO?) = result {
-                    cached(responseDTO.toDomain(isFavoriteIds: favoriteMoviesIds))
+                    let page = responseDTO.toDomain(isFavoriteIds: favoriteMoviesIds)
+                    safeCached(page)
                 }
                 guard !task.isCancelled else { return }
 
@@ -48,9 +61,10 @@ extension DefaultMoviesRepository: MoviesRepository {
                     switch result {
                     case .success(let responseDTO):
                         self.cache.save(response: responseDTO, for: requestDTO)
-                        completion(.success(responseDTO.toDomain(isFavoriteIds: favoriteMoviesIds)))
+                        let page = responseDTO.toDomain(isFavoriteIds: favoriteMoviesIds)
+                        safeCompletion(.success(page))
                     case .failure(let error):
-                        completion(.failure(error))
+                        safeCompletion(.failure(error))
                     }
                 }
             }

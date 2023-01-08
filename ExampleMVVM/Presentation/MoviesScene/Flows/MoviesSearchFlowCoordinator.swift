@@ -8,7 +8,7 @@
 import UIKit
 
 protocol MoviesSearchFlowCoordinatorDependencies  {
-    func makeMoviesListViewController(actions: MoviesListViewModelActions) -> MoviesListViewController
+    func makeMoviesListViewController(actions: MoviesListIntentActions) -> MoviesListViewController
     func makeMoviesDetailsViewController(movie: Movie) -> UIViewController
     func makeMoviesQueriesSuggestionsListViewController(didSelect: @escaping MoviesQueryListViewModelDidSelectAction) -> UIViewController
 }
@@ -29,7 +29,7 @@ final class MoviesSearchFlowCoordinator {
     
     func start() {
         // Note: here we keep strong reference with actions, this way this flow do not need to be strong referenced
-        let actions = MoviesListViewModelActions(showMovieDetails: showMovieDetails,
+        let actions = MoviesListIntentActions(showMovieDetails: showMovieDetails,
                                                  showMovieQueriesSuggestions: showMovieQueriesSuggestions,
                                                  closeMovieQueriesSuggestions: closeMovieQueriesSuggestions)
         let vc = dependencies.makeMoviesListViewController(actions: actions)

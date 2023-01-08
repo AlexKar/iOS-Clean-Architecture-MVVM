@@ -15,10 +15,10 @@ final class MovieDetailsViewController: UIViewController, StoryboardInstantiable
     @IBOutlet private var favoritesLabel: UILabel!
     @IBOutlet private var overviewTextView: UITextView!
     @IBOutlet private var favoritesButton: UIButton!
+    
+    private var actionsHandler: Actionable?
 
     // MARK: - Lifecycle
-
-    private var actionsHandler: Actionable?
     
     static func create(with actionsHandler: Actionable) -> MovieDetailsViewController {
         let view = MovieDetailsViewController.instantiateViewController()

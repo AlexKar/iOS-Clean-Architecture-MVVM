@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct MoviesListItemViewModel: Equatable {
+struct MoviesListItemState: State {
     let title: String
     let overview: String
     let releaseDate: String
@@ -16,7 +16,7 @@ struct MoviesListItemViewModel: Equatable {
     let isFavorite: Bool
 }
 
-extension MoviesListItemViewModel {
+extension MoviesListItemState {
 
     init(movie: Movie) {
         self.title = movie.title ?? ""

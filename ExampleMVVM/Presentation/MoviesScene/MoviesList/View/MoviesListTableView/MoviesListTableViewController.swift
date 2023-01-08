@@ -9,7 +9,8 @@ import UIKit
 
 final class MoviesListTableViewController: UITableViewController {
 
-    var viewModel: MoviesListViewModel!
+    private(set) var items: [MoviesListItemState] = []
+    var actionsHandler: Actionable?
 
     var posterImagesRepository: PosterImagesRepository?
     var nextPageLoadingSpinner: UIActivityIndicatorView?
@@ -21,11 +22,12 @@ final class MoviesListTableViewController: UITableViewController {
         setupViews()
     }
 
-    func reload() {
+    func reload(withItems items: [MoviesListItemState]) {
+        self.items = items
         tableView.reloadData()
     }
 
-    func updateLoading(_ loading: MoviesListViewModelLoading?) {
+    func updateLoading(_ loading: MoviesListLoadingState?) {
         switch loading {
         case .nextPage:
             nextPageLoadingSpinner?.removeFromSuperview()
@@ -49,7 +51,7 @@ final class MoviesListTableViewController: UITableViewController {
 extension MoviesListTableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.items.value.count
+        return items.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -58,22 +60,21 @@ extension MoviesListTableViewController {
             assertionFailure("Cannot dequeue reusable cell \(MoviesListItemCell.self) with reuseIdentifier: \(MoviesListItemCell.reuseIdentifier)")
             return UITableViewCell()
         }
+        cell.posterImagesRepository = posterImagesRepository
+        cell.update(with: items[indexPath.row])
 
-        cell.fill(with: viewModel.items.value[indexPath.row],
-                  posterImagesRepository: posterImagesRepository)
-
-        if indexPath.row == viewModel.items.value.count - 1 {
-            viewModel.didLoadNextPage()
+        if indexPath.row == items.count - 1 {
+            actionsHandler?.dispatch(MoviesListAction.loadNextPage)
         }
 
         return cell
     }
 
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return viewModel.isEmpty ? tableView.frame.height : super.tableView(tableView, heightForRowAt: indexPath)
+        return items.isEmpty ? tableView.frame.height : super.tableView(tableView, heightForRowAt: indexPath)
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        viewModel.didSelectItem(at: indexPath.row)
+        actionsHandler?.dispatch(MoviesListAction.selectItem(index: indexPath.row))
     }
 }

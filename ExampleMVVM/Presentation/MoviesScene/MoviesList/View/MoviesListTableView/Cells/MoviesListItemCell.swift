@@ -8,9 +8,11 @@
 import UIKit
 
 final class MoviesListItemCell: UITableViewCell {
-
+    
     static let reuseIdentifier = String(describing: MoviesListItemCell.self)
     static let height = CGFloat(130)
+    
+    public var posterImagesRepository: PosterImagesRepository?
 
     @IBOutlet private var titleLabel: UILabel!
     @IBOutlet private var dateLabel: UILabel!
@@ -18,8 +20,7 @@ final class MoviesListItemCell: UITableViewCell {
     @IBOutlet private var posterImageView: UIImageView!
     @IBOutlet private var isFavoriteLabel: UILabel!
 
-    private var viewModel: MoviesListItemViewModel!
-    private var posterImagesRepository: PosterImagesRepository?
+    private var posterImagePath: String?
     private var imageLoadTask: Cancellable? { willSet { imageLoadTask?.cancel() } }
         
     override func awakeFromNib() {
@@ -29,26 +30,13 @@ final class MoviesListItemCell: UITableViewCell {
         isFavoriteLabel.clipsToBounds = true
     }
 
-    func fill(with viewModel: MoviesListItemViewModel, posterImagesRepository: PosterImagesRepository?) {
-        self.viewModel = viewModel
-        self.posterImagesRepository = posterImagesRepository
-
-        titleLabel.text = viewModel.title
-        dateLabel.text = viewModel.releaseDate
-        overviewLabel.text = viewModel.overview
-        
-        isFavoriteLabel.isHidden = !viewModel.isFavorite
-        
-        updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width))
-    }
-
     private func updatePosterImage(width: Int) {
         posterImageView.image = nil
-        guard let posterImagePath = viewModel.posterImagePath else { return }
+        guard let posterImagePath = posterImagePath else { return }
 
         imageLoadTask = posterImagesRepository?.fetchImage(with: posterImagePath, width: width) { [weak self] result in
             guard let self = self else { return }
-            guard self.viewModel.posterImagePath == posterImagePath else { return }
+            guard self.posterImagePath == posterImagePath else { return }
             if case let .success(data) = result {
                 self.posterImageView.image = UIImage(data: data)
             }
@@ -56,3 +44,16 @@ final class MoviesListItemCell: UITableViewCell {
         }
     }
 }
+
+extension MoviesListItemCell: Viewable {
+    func update(with state: MoviesListItemState) {
+        titleLabel.text = state.title
+        dateLabel.text = state.releaseDate
+        overviewLabel.text = state.overview
+        isFavoriteLabel.isHidden = !state.isFavorite
+        
+        posterImagePath = state.posterImagePath
+        updatePosterImage(width: Int(posterImageView.imageSizeAfterAspectFit.scaledSize.width))
+    }
+}
+

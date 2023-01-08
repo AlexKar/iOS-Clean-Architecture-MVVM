@@ -63,14 +63,19 @@ final class MoviesSceneDIContainer {
     }
     
     // MARK: - Movies List
-    func makeMoviesListViewController(actions: MoviesListViewModelActions) -> MoviesListViewController {
-        return MoviesListViewController.create(with: makeMoviesListViewModel(actions: actions),
-                                               posterImagesRepository: makePosterImagesRepository())
+    func makeMoviesListViewController(actions: MoviesListIntentActions) -> MoviesListViewController {
+        let intent = makeMoviesListIntent(actions: actions)
+        let controller = MoviesListViewController.create(with: intent, posterImagesRepository: makePosterImagesRepository())
+        intent.connect(to: controller)
+        return controller
     }
     
-    func makeMoviesListViewModel(actions: MoviesListViewModelActions) -> MoviesListViewModel {
-        return DefaultMoviesListViewModel(searchMoviesUseCase: makeSearchMoviesUseCase(),
-                                          actions: actions)
+    func makeMoviesListIntent(actions: MoviesListIntentActions) -> MoviesListIntent {
+        MoviesListIntent(
+            searchMoviesUseCase: makeSearchMoviesUseCase(),
+            actions: actions
+        )
+        
     }
     
     // MARK: - Movie Details
