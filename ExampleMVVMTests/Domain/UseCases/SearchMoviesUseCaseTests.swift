@@ -33,11 +33,17 @@ class SearchMoviesUseCaseTests: XCTestCase {
         }
     }
     
-    struct MoviesRepositoryMock: MoviesRepository {
+    class MoviesRepositoryMock: DelegatesStorage<MoviesRepositoryDelegate>, MoviesRepository {
         var result: Result<MoviesPage, Error>
         func fetchMoviesList(query: MovieQuery, page: Int, cached: @escaping (MoviesPage) -> Void, completion: @escaping (Result<MoviesPage, Error>) -> Void) -> Cancellable? {
             completion(result)
             return nil
+        }
+        func markMovie(_ movie: Movie, isFavorite: Bool) -> Cancellable? {
+            return nil
+        }
+        init(result: Result<MoviesPage, Error>) {
+            self.result = result
         }
     }
     

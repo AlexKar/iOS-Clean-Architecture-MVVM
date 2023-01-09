@@ -12,7 +12,7 @@
         <!--Movie Details View Controller-->
         <scene sceneID="wNu-vz-AgM">
             <objects>
-                <viewController storyboardIdentifier="MovieDetailsViewControllerID" useStoryboardIdentifierAsRestorationIdentifier="YES" id="mrg-aK-cPW" customClass="MovieDetailsViewController" customModule="ExampleMVVM" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="MovieDetailsViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="mrg-aK-cPW" customClass="MovieDetailsViewController" customModule="ExampleMVVM" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="xRA-Nz-89m">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

@@ -8,14 +8,6 @@
 
 import Foundation
 
-struct MovieDetailsState: State {
-    let title: String
-    let posterImage: Data?
-    let overview: String
-    let rating: String?
-    var isFavorite: Bool
-}
-
 extension MovieDetailsState {
     init(movie: Movie, posterImage: Data?) {
         self.init(
@@ -26,11 +18,6 @@ extension MovieDetailsState {
             isFavorite: movie.isFavorite
         )
     }
-}
-
-enum MovieDetailsAction: Action {
-    case updatePosterImage(width: Int)
-    case favoriteButtonPressed
 }
 
 final class MovieDetailsIntent: Intent<MovieDetailsState, MovieDetailsAction>   {
