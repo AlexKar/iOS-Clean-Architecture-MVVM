@@ -8,51 +8,38 @@
 import Foundation
 import SwiftUI
 
-@available(iOS 13.0, *)
-extension MoviesQueryListItemViewModel: Identifiable { }
+extension MoviesQueryListItemState: Identifiable { }
 
-@available(iOS 13.0, *)
-struct MoviesQueryListView: View {
-    @ObservedObject var viewModelWrapper: MoviesQueryListViewModelWrapper
+struct MoviesQueryListView: SUViewable {
+
+    @ObservedObject var intent: SUIntent<MoviesQueryListState, MoviesQueryListAction>
     
     var body: some View {
-        List(viewModelWrapper.items) { item in
+        List(intent.state.items) { item in
             Button(action: {
-                self.viewModelWrapper.viewModel?.didSelect(item: item)
+                self.intent.dispatch(.select(item: item))
             }) {
                 Text(item.query)
             }
         }
         .onAppear {
-            self.viewModelWrapper.viewModel?.viewWillAppear()
+            self.intent.load()
         }
     }
 }
 
-@available(iOS 13.0, *)
-final class MoviesQueryListViewModelWrapper: ObservableObject {
-    var viewModel: MoviesQueryListViewModel?
-    @Published var items: [MoviesQueryListItemViewModel] = []
-    
-    init(viewModel: MoviesQueryListViewModel?) {
-        self.viewModel = viewModel
-        viewModel?.items.observe(on: self) { [weak self] values in self?.items = values }
-    }
-}
-
 #if DEBUG
-@available(iOS 13.0, *)
 struct MoviesQueryListView_Previews: PreviewProvider {
     static var previews: some View {
-        MoviesQueryListView(viewModelWrapper: previewViewModelWrapper)
+        MoviesQueryListView(intent: intent)
     }
     
-    static var previewViewModelWrapper: MoviesQueryListViewModelWrapper = {
-        var viewModel = MoviesQueryListViewModelWrapper(viewModel: nil)
-        viewModel.items = [MoviesQueryListItemViewModel(query: "item 1"),
-                           MoviesQueryListItemViewModel(query: "item 2")
+    static var intent: SUIntent<MoviesQueryListState, MoviesQueryListAction> = {
+        let items = [
+            MoviesQueryListItemState(query: "item 1"),
+            MoviesQueryListItemState(query: "item 2")
         ]
-        return viewModel
+        return SUIntent<MoviesQueryListState, MoviesQueryListAction>(state: MoviesQueryListState(items: items))
     }()
 }
 #endif

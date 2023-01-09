@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Combine
 
 public protocol State: Equatable {}
@@ -82,5 +83,37 @@ private final class StateHandler<S: State> {
         subject.removeDuplicates().sink { [weak view] state in
             view?.update(with: state)
         }.store(in: &storage)
+    }
+}
+
+/* --------- SwiftUI ------------ */
+
+public protocol SUViewable: View {
+    associatedtype AssotiatedIntent: Intentable
+    var intent: AssotiatedIntent { get set }
+}
+
+public protocol Intentable: Actionable, ObservableObject {
+    associatedtype AssociatedState: State
+    var state: AssociatedState { get set  }
+}
+
+open class SUIntent<S: State, A: Action>: Intentable {
+    
+    @Published public var state: S
+    
+    public init(state: S) {
+        self.state = state
+    }
+    
+    open func dispatch(_ action: A) { }
+    
+    open func load() { }
+    
+    public func dispatch(_ action: Action) {
+        guard let action = action as? A else {
+            return
+        }
+        dispatch(action)
     }
 }

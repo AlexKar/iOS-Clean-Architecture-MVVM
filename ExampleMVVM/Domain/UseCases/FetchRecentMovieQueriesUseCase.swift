@@ -29,7 +29,6 @@ final class FetchRecentMovieQueriesUseCase: UseCase {
     }
     
     func start() -> Cancellable? {
-
         moviesQueriesRepository.fetchRecentsQueries(maxCount: requestValue.maxCount, completion: completion)
         return nil
     }

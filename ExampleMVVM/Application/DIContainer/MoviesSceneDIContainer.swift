@@ -93,24 +93,18 @@ final class MoviesSceneDIContainer {
     }
     
     // MARK: - Movies Queries Suggestions List
+    
     func makeMoviesQueriesSuggestionsListViewController(didSelect: @escaping MoviesQueryListViewModelDidSelectAction) -> UIViewController {
-        if #available(iOS 13.0, *) { // SwiftUI
-            let view = MoviesQueryListView(viewModelWrapper: makeMoviesQueryListViewModelWrapper(didSelect: didSelect))
-            return UIHostingController(rootView: view)
-        } else { // UIKit
-            return MoviesQueriesTableViewController.create(with: makeMoviesQueryListViewModel(didSelect: didSelect))
-        }
+        let view = MoviesQueryListView(intent: makeMoviesQueryListIntent(didSelect: didSelect))
+        return UIHostingController(rootView: view)
     }
     
-    func makeMoviesQueryListViewModel(didSelect: @escaping MoviesQueryListViewModelDidSelectAction) -> MoviesQueryListViewModel {
-        return DefaultMoviesQueryListViewModel(numberOfQueriesToShow: 10,
-                                               fetchRecentMovieQueriesUseCaseFactory: makeFetchRecentMovieQueriesUseCase,
-                                               didSelect: didSelect)
-    }
-
-    @available(iOS 13.0, *)
-    func makeMoviesQueryListViewModelWrapper(didSelect: @escaping MoviesQueryListViewModelDidSelectAction) -> MoviesQueryListViewModelWrapper {
-        return MoviesQueryListViewModelWrapper(viewModel: makeMoviesQueryListViewModel(didSelect: didSelect))
+    func makeMoviesQueryListIntent(didSelect: @escaping MoviesQueryListViewModelDidSelectAction) -> SUIntent<MoviesQueryListState, MoviesQueryListAction> {
+        MoviesQueryListIntent(
+            numberOfQueriesToShow: 10,
+            fetchRecentMovieQueriesUseCaseFactory: makeFetchRecentMovieQueriesUseCase,
+            didSelect: didSelect
+        )
     }
 
     // MARK: - Flow Coordinators

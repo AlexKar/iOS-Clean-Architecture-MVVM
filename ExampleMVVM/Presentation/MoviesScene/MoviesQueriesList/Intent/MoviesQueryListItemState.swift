@@ -7,16 +7,16 @@
 
 import Foundation
 
-class MoviesQueryListItemViewModel {
+class MoviesQueryListItemState: State {
     let query: String
-
+    
     init(query: String) {
         self.query = query
     }
 }
 
-extension MoviesQueryListItemViewModel: Equatable {
-    static func == (lhs: MoviesQueryListItemViewModel, rhs: MoviesQueryListItemViewModel) -> Bool {
+extension MoviesQueryListItemState: Equatable {
+    static func == (lhs: MoviesQueryListItemState, rhs: MoviesQueryListItemState) -> Bool {
         return lhs.query == rhs.query
     }
 }

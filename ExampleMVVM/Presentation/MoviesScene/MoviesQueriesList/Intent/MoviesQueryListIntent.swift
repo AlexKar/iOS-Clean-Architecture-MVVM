@@ -9,61 +9,65 @@ import Foundation
 
 typealias MoviesQueryListViewModelDidSelectAction = (MovieQuery) -> Void
 
-protocol MoviesQueryListViewModelInput {
-    func viewWillAppear()
-    func didSelect(item: MoviesQueryListItemViewModel)
+enum MoviesQueryListAction: Action {
+    case select(item: MoviesQueryListItemState)
 }
 
-protocol MoviesQueryListViewModelOutput {
-    var items: Observable<[MoviesQueryListItemViewModel]> { get }
+struct MoviesQueryListState: State {
+    let items: [MoviesQueryListItemState]
 }
-
-protocol MoviesQueryListViewModel: MoviesQueryListViewModelInput, MoviesQueryListViewModelOutput { }
 
 typealias FetchRecentMovieQueriesUseCaseFactory = (
     FetchRecentMovieQueriesUseCase.RequestValue,
     @escaping (FetchRecentMovieQueriesUseCase.ResultValue) -> Void
     ) -> UseCase
 
-final class DefaultMoviesQueryListViewModel: MoviesQueryListViewModel {
 
+final class MoviesQueryListIntent: SUIntent<MoviesQueryListState, MoviesQueryListAction> {
+    
     private let numberOfQueriesToShow: Int
     private let fetchRecentMovieQueriesUseCaseFactory: FetchRecentMovieQueriesUseCaseFactory
     private let didSelect: MoviesQueryListViewModelDidSelectAction?
-    
-    // MARK: - OUTPUT
-    let items: Observable<[MoviesQueryListItemViewModel]> = Observable([])
-    
+        
     init(numberOfQueriesToShow: Int,
          fetchRecentMovieQueriesUseCaseFactory: @escaping FetchRecentMovieQueriesUseCaseFactory,
          didSelect: MoviesQueryListViewModelDidSelectAction? = nil) {
         self.numberOfQueriesToShow = numberOfQueriesToShow
         self.fetchRecentMovieQueriesUseCaseFactory = fetchRecentMovieQueriesUseCaseFactory
         self.didSelect = didSelect
+        
+        super.init(state: MoviesQueryListState(items: []))
     }
     
-    private func updateMoviesQueries() {
+    override func dispatch(_ action: MoviesQueryListAction) {
+        switch action {
+        case .select(let item):
+            didSelect(item: item)
+        }
+    }
+    
+    override func load() {
+        didLoad()
+    }
+}
+
+extension MoviesQueryListIntent {
+        
+    private func didLoad() {
         let request = FetchRecentMovieQueriesUseCase.RequestValue(maxCount: numberOfQueriesToShow)
-        let completion: (FetchRecentMovieQueriesUseCase.ResultValue) -> Void = { result in
+        let completion: (FetchRecentMovieQueriesUseCase.ResultValue) -> Void = { [weak self] result in
             switch result {
             case .success(let items):
-                self.items.value = items.map { $0.query }.map(MoviesQueryListItemViewModel.init)
+                let items = items.map { $0.query }.map(MoviesQueryListItemState.init)
+                self?.state = MoviesQueryListState(items: items)
             case .failure: break
             }
         }
         let useCase = fetchRecentMovieQueriesUseCaseFactory(request, completion)
         useCase.start()
     }
-}
-
-// MARK: - INPUT. View event methods
-extension DefaultMoviesQueryListViewModel {
-        
-    func viewWillAppear() {
-        updateMoviesQueries()
-    }
     
-    func didSelect(item: MoviesQueryListItemViewModel) {
+    private func didSelect(item: MoviesQueryListItemState) {
         didSelect?(MovieQuery(query: item.query))
     }
 }
