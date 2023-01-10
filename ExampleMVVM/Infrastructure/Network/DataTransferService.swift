@@ -60,6 +60,8 @@ extension DefaultDataTransferService: DataTransferService {
         return self.networkService.request(endpoint: endpoint) { result in
             switch result {
             case .success(let data):
+                let str = String(decoding: data!, as: UTF8.self)
+                print(str)
                 let result: Result<T, DataTransferError> = self.decode(data: data, decoder: endpoint.responseDecoder)
                 DispatchQueue.main.async { return completion(result) }
             case .failure(let error):

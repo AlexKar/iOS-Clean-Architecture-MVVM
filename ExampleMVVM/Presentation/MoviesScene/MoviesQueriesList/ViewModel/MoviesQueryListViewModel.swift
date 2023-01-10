@@ -6,11 +6,18 @@
 //
 
 import Foundation
+import ModernRIBs
 
-typealias MoviesQueryListViewModelDidSelectAction = (MovieQuery) -> Void
+protocol MoviesQueryListRouting: ViewableRouting {
+    // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
+}
+
+protocol MoviesQueryListListener: AnyObject {
+    // TODO: Declare methods the interactor can invoke to communicate with other RIBs.
+    func didSelectMovie(_ query: MovieQuery)
+}
 
 protocol MoviesQueryListViewModelInput {
-    func viewWillAppear()
     func didSelect(item: MoviesQueryListItemViewModel)
 }
 
@@ -18,32 +25,42 @@ protocol MoviesQueryListViewModelOutput {
     var items: Observable<[MoviesQueryListItemViewModel]> { get }
 }
 
-protocol MoviesQueryListViewModel: MoviesQueryListViewModelInput, MoviesQueryListViewModelOutput { }
+protocol MoviesQueryListViewModel: MoviesQueryListInteractable, MoviesQueryListViewModelInput, MoviesQueryListViewModelOutput { }
 
-typealias FetchRecentMovieQueriesUseCaseFactory = (
-    FetchRecentMovieQueriesUseCase.RequestValue,
-    @escaping (FetchRecentMovieQueriesUseCase.ResultValue) -> Void
-    ) -> UseCase
-
-final class DefaultMoviesQueryListViewModel: MoviesQueryListViewModel {
+final class DefaultMoviesQueryListViewModel: Interactor, MoviesQueryListViewModel {
+    weak var router: MoviesQueryListRouting?
+    weak var listener: MoviesQueryListListener?
 
     private let numberOfQueriesToShow: Int
-    private let fetchRecentMovieQueriesUseCaseFactory: FetchRecentMovieQueriesUseCaseFactory
-    private let didSelect: MoviesQueryListViewModelDidSelectAction?
+    private let fetchRecentMovieQueriesUseCase: FetchRecentMovieQueriesUseCase
     
     // MARK: - OUTPUT
     let items: Observable<[MoviesQueryListItemViewModel]> = Observable([])
     
-    init(numberOfQueriesToShow: Int,
-         fetchRecentMovieQueriesUseCaseFactory: @escaping FetchRecentMovieQueriesUseCaseFactory,
-         didSelect: MoviesQueryListViewModelDidSelectAction? = nil) {
+    init(
+        numberOfQueriesToShow: Int,
+        fetchRecentMovieQueriesUseCase: FetchRecentMovieQueriesUseCase
+    ) {
         self.numberOfQueriesToShow = numberOfQueriesToShow
-        self.fetchRecentMovieQueriesUseCaseFactory = fetchRecentMovieQueriesUseCaseFactory
-        self.didSelect = didSelect
+        self.fetchRecentMovieQueriesUseCase = fetchRecentMovieQueriesUseCase
     }
-    
+
+    // MARK: - Interactor
+
+    override func didBecomeActive() {
+        super.didBecomeActive()
+        // TODO: Implement business logic here.
+        updateMoviesQueries()
+    }
+
+    override func willResignActive() {
+        super.willResignActive()
+        // TODO: Pause any business logic.
+    }
+
+    // MARK: Private methods
+
     private func updateMoviesQueries() {
-        let request = FetchRecentMovieQueriesUseCase.RequestValue(maxCount: numberOfQueriesToShow)
         let completion: (FetchRecentMovieQueriesUseCase.ResultValue) -> Void = { result in
             switch result {
             case .success(let items):
@@ -51,19 +68,13 @@ final class DefaultMoviesQueryListViewModel: MoviesQueryListViewModel {
             case .failure: break
             }
         }
-        let useCase = fetchRecentMovieQueriesUseCaseFactory(request, completion)
-        useCase.start()
+        fetchRecentMovieQueriesUseCase.fetchRecentsQueries(maxCount: numberOfQueriesToShow, completion: completion)
     }
 }
 
 // MARK: - INPUT. View event methods
 extension DefaultMoviesQueryListViewModel {
-        
-    func viewWillAppear() {
-        updateMoviesQueries()
-    }
-    
     func didSelect(item: MoviesQueryListItemViewModel) {
-        didSelect?(MovieQuery(query: item.query))
+        listener?.didSelectMovie(MovieQuery(query: item.query))
     }
 }

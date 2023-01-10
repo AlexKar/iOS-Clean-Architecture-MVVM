@@ -8,7 +8,7 @@
 
 import UIKit
 
-final class MovieDetailsViewController: UIViewController, StoryboardInstantiable {
+final class MovieDetailsViewController: UIViewController, StoryboardInstantiable, MovieDetailsViewControllable {
 
     @IBOutlet private var posterImageView: UIImageView!
     @IBOutlet private var overviewTextView: UITextView!

@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ModernRIBs
 
 final class MoviesListViewController: UIViewController, StoryboardInstantiable, Alertable {
     
@@ -111,6 +112,21 @@ final class MoviesListViewController: UIViewController, StoryboardInstantiable, 
     private func showError(_ error: String) {
         guard !error.isEmpty else { return }
         showAlert(title: viewModel.errorTitle, message: error)
+    }
+}
+
+// MARK: - MoviesListViewControllable
+
+extension MoviesListViewController: MoviesListViewControllable {
+    func presentMoviesQueriesSuggests(_ suggests: ViewControllable) {
+        let vc = suggests.uiviewController
+        add(child: vc, container: suggestionsListContainer)
+        suggestionsListContainer.isHidden = false
+    }
+    func dismissMoviesQueriesSuggests(_ suggests: ViewControllable) {
+        let vc = suggests.uiviewController
+        vc.remove()
+        suggestionsListContainer.isHidden = true
     }
 }
 

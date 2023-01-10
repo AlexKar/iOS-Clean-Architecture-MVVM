@@ -6,13 +6,18 @@
 //
 
 import Foundation
+import ModernRIBs
 
-struct MoviesListViewModelActions {
-    /// Note: if you would need to edit movie inside Details screen and update this Movies List screen with updated movie then you would need this closure:
-    /// showMovieDetails: (Movie, @escaping (_ updated: Movie) -> Void) -> Void
-    let showMovieDetails: (Movie) -> Void
-    let showMovieQueriesSuggestions: (@escaping (_ didSelect: MovieQuery) -> Void) -> Void
-    let closeMovieQueriesSuggestions: () -> Void
+protocol MoviesListRouting: ViewableRouting {
+    // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
+
+    func showMovieQueriesSuggestions()
+    func closeMovieQueriesSuggestions()
+}
+
+protocol MoviesListListener: AnyObject {
+    // TODO: Declare methods the interactor can invoke to communicate with other RIBs.
+    func didSelectMovie(_ movie: Movie)
 }
 
 enum MoviesListViewModelLoading {
@@ -42,12 +47,15 @@ protocol MoviesListViewModelOutput {
     var searchBarPlaceholder: String { get }
 }
 
-protocol MoviesListViewModel: MoviesListViewModelInput, MoviesListViewModelOutput {}
+protocol MoviesListViewModel: MoviesListViewModelInput, MoviesListViewModelOutput, MoviesListInteractable {}
 
-final class DefaultMoviesListViewModel: MoviesListViewModel {
+final class DefaultMoviesListViewModel: Interactor, MoviesListViewModel {
+    weak var router: MoviesListRouting?
+    
+    weak var listener: MoviesListListener?
+
 
     private let searchMoviesUseCase: SearchMoviesUseCase
-    private let actions: MoviesListViewModelActions?
 
     var currentPage: Int = 0
     var totalPageCount: Int = 1
@@ -71,12 +79,23 @@ final class DefaultMoviesListViewModel: MoviesListViewModel {
 
     // MARK: - Init
 
-    init(searchMoviesUseCase: SearchMoviesUseCase,
-         actions: MoviesListViewModelActions? = nil) {
+    init(searchMoviesUseCase: SearchMoviesUseCase) {
         self.searchMoviesUseCase = searchMoviesUseCase
-        self.actions = actions
     }
 
+
+    // MARK: - Interactor
+
+    override func didBecomeActive() {
+        super.didBecomeActive()
+        // TODO: Implement business logic here.
+    }
+
+    override func willResignActive() {
+        super.willResignActive()
+        // TODO: Pause any business logic.
+    }
+    
     // MARK: - Private
 
     private func appendPage(_ moviesPage: MoviesPage) {
@@ -127,6 +146,14 @@ final class DefaultMoviesListViewModel: MoviesListViewModel {
     }
 }
 
+// MARK: - MoviesQueryListListener
+
+extension DefaultMoviesListViewModel {
+    func didSelectMovie(_ query: MovieQuery) {
+//        listener?.didSelectMovie(pages.movies[index])
+    }
+}
+
 // MARK: - INPUT. View event methods
 
 extension DefaultMoviesListViewModel {
@@ -149,15 +176,16 @@ extension DefaultMoviesListViewModel {
     }
 
     func showQueriesSuggestions() {
-        actions?.showMovieQueriesSuggestions(update(movieQuery:))
+//        actions?.showMovieQueriesSuggestions(update(movieQuery:))
+        router?.showMovieQueriesSuggestions() // Гавнина вернет из другого модуля данные
     }
 
     func closeQueriesSuggestions() {
-        actions?.closeMovieQueriesSuggestions()
+        router?.closeMovieQueriesSuggestions()
     }
 
     func didSelectItem(at index: Int) {
-        actions?.showMovieDetails(pages.movies[index])
+        listener?.didSelectMovie(pages.movies[index])
     }
 }
 

@@ -7,6 +7,15 @@
 //
 
 import Foundation
+import ModernRIBs
+
+protocol MovieDetailsRouting: ViewableRouting {
+    // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
+}
+
+protocol MovieDetailsListener: AnyObject {
+    // TODO: Declare methods the interactor can invoke to communicate with other RIBs.
+}
 
 protocol MovieDetailsViewModelInput {
     func updatePosterImage(width: Int)
@@ -19,9 +28,11 @@ protocol MovieDetailsViewModelOutput {
     var overview: String { get }
 }
 
-protocol MovieDetailsViewModel: MovieDetailsViewModelInput, MovieDetailsViewModelOutput { }
+protocol MovieDetailsViewModel: MovieDetailsInteractable, MovieDetailsViewModelInput, MovieDetailsViewModelOutput { }
 
-final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
+final class DefaultMovieDetailsViewModel: Interactor, MovieDetailsViewModel {
+    weak var router: MovieDetailsRouting?
+    weak var listener: MovieDetailsListener?
     
     private let posterImagePath: String?
     private let posterImagesRepository: PosterImagesRepository
@@ -40,6 +51,17 @@ final class DefaultMovieDetailsViewModel: MovieDetailsViewModel {
         self.posterImagePath = movie.posterPath
         self.isPosterImageHidden = movie.posterPath == nil
         self.posterImagesRepository = posterImagesRepository
+    }
+
+    // MARK: - Interactor
+    override func didBecomeActive() {
+        super.didBecomeActive()
+        // TODO: Implement business logic here.
+    }
+
+    override func willResignActive() {
+        super.willResignActive()
+        // TODO: Pause any business logic.
     }
 }
 

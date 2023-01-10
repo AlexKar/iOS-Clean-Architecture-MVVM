@@ -6,27 +6,22 @@
 //
 
 import UIKit
+import ModernRIBs
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    let appDIContainer = AppDIContainer()
-    var appFlowCoordinator: AppFlowCoordinator?
     var window: UIWindow?
-    
+    var launchRouter: LaunchRouting?
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         AppAppearance.setupAppearance()
         
-        window = UIWindow(frame: UIScreen.main.bounds)
-        let navigationController = UINavigationController()
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        launchRouter = RootBuilder(dependency: AppComponent()).build()
+        launchRouter?.launch(from: window)
 
-        window?.rootViewController = navigationController
-        appFlowCoordinator = AppFlowCoordinator(navigationController: navigationController,
-                                                appDIContainer: appDIContainer)
-        appFlowCoordinator?.start()
-        window?.makeKeyAndVisible()
-    
+        self.window = window
         return true
     }
 

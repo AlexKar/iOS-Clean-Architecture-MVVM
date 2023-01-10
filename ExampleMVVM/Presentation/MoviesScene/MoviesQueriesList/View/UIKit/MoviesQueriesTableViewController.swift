@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class MoviesQueriesTableViewController: UITableViewController, StoryboardInstantiable {
+final class MoviesQueriesTableViewController: UITableViewController, MoviesQueryListViewControllable, StoryboardInstantiable {
     
     private var viewModel: MoviesQueryListViewModel!
 
@@ -27,12 +27,6 @@ final class MoviesQueriesTableViewController: UITableViewController, StoryboardI
     
     private func bind(to viewModel: MoviesQueryListViewModel) {
         viewModel.items.observe(on: self) { [weak self] _ in self?.tableView.reloadData() }
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-        viewModel.viewWillAppear()
     }
 
     // MARK: - Private

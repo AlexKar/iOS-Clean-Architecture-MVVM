@@ -23,9 +23,6 @@ struct MoviesQueryListView: View {
                 Text(item.query)
             }
         }
-        .onAppear {
-            self.viewModelWrapper.viewModel?.viewWillAppear()
-        }
     }
 }
 
